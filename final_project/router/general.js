@@ -38,13 +38,17 @@ public_users.get('/',function (req, res) {
 public_users.get('/isbn/:isbn',function (req, res) {
 
   let isbn = req.params.isbn;
-  let booksList=Object.values(books)
-  let book = booksList.find(b => b.isbn===isbn);
-  if (book) {
-    let bookDetails = JSON.stringify(book);
-    res.send(`Book details for ISBN ${isbn}: ${bookDetails}`);
-  } else {
-    res.send(`No book found for ISBN ${isbn}`);}
+  let booksList = Object.values(books)
+  if(isbn-1 < booksList.length) {
+    let book = booksList[isbn-1];
+    if (book) {
+      let bookDetails = JSON.stringify(book);
+      res.send(`Book details for ISBN ${isbn}: ${bookDetails}`);
+    } 
+  }
+  else {
+    res.send(`No book found for ISBN ${isbn}`);
+  }
  });
   
 
@@ -76,14 +80,17 @@ public_users.get('/title/:title',function (req, res) {
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
-  const isbn = req.params.isbn;
-  let booksList=Object.values(books)
-  let book = booksList.find(b => b.isbn===isbn);
-    if (book) {
-    const reviews = book.reviews;
-    res.send(reviews);
-  } else {
-    res.send("Book not found");}
+    const isbn = req.params.isbn;
+    const booksList = Object.values(books);
+    if(isbn-1 < booksList.length) {
+      let book = booksList[isbn-1];
+      if (book) {
+        res.send(`Reviews for ISBN ${isbn}: ${JSON.stringify(book.reviews)}`);
+      }
+    }
+    else {
+        res.send(`No book found for ISBN ${isbn}`);
+    }
 });
 
 module.exports.general = public_users;

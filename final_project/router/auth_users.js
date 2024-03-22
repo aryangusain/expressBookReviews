@@ -21,8 +21,6 @@ const isValid = (username, password)=>{
 
 }
 
-
-
 const authenticatedUser = (username,password)=>{
    // check if the username exists in our records
    let usersList = Object.values(users);
@@ -39,26 +37,30 @@ const authenticatedUser = (username,password)=>{
 }
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-  const { username, password } = req.body;
+    username = req.body.username;
+    password = req.body.password;
+    if(!username || !password){
+      res.status(400).send("Either username or password is not provided.");
+    } else{
+      validationStatus = authenticatedUser(username,password);
+      if(validationStatus){
+        let accessToken = jwt.sign({
+          data: {
+            "username" : username,
+            "password" : password
+          }
+        }, 'access', { expiresIn: 60 * 60 });
+  
+        req.session.authorization = {
+          accessToken
+        }
+        res.status(200).send("Customer Successfully Logged In.");
+      } else{
+        res.status(401).send("Either username or password is incorrect, unauthorized.");
+      }
+    }
+  });
 
-  // Check if username or password is missing
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Please provide a valid username and password' });
-  }
-  const user = users.find(u => u.username === username && u.password === password);
-
-  // Check if username and password match
-  if (username === user.username && password === user.password) {
-    const accessToken = jwt.sign({ username, userPassword: password }, "secretKey", { expiresIn: '1h' });
-
-    // Store the access token in the session
-    req.session.accessToken = accessToken;
-
-    return res.status(200).json({ message: 'Login successful',accessToken });
-  } else {
-    return res.status(401).json({ message: 'Invalid username or password' });
-  }
-});
 regd_users.get("/auth/review/", (req,res) => {
   if (!req.session.accessToken) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -103,9 +105,6 @@ regd_users.put('/auth/review/:isbn', function(req, res) {
   res.json(`Your review has been posted for the book ${book.title} by ${book.author} with ISBN ${isbn}: ==>${JSON.stringify(book)}`);
 
 });
-
-
-
 
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
